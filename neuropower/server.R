@@ -15,10 +15,11 @@ shinyServer(
       data <- readNIfTI(folder.new,reorient=FALSE)@.Data
       withProgress(message = 'Calculation in progress',
                    detail = paste("Percentage finished:",0), value = 0,expr={
-      peaks <- cluster(data)})
+      u <- as.numeric(input$PeakThres)
+                     
+      peaks <- cluster(data,u)})
       sub <- as.numeric(input$Subjects)
       df <- ifelse(input$OneTwoSample=="One-Sample",sub-1,sub-2)
-      u <- as.numeric(input$PeakThres)
       peaks <- peaks[peaks$peaks>u,]
       peaks$pvalue <- exp(-u*(peaks$peaks-u)) 
       if(input$TorZ == "T"){peaks$pvalue <- -qnorm(pt(-peaks$pvalue,df))}   
@@ -37,7 +38,7 @@ shinyServer(
     
     np.est <- reactive({
       if(input$Compute2==0){return()}
-      npest <- NPestimate(data()$peaks,data()$TorZ,data()$u,data()$df,plot=FALSE)
+      npest <- NPestimate(data()$peaks,data()$TorZ,data()$u,data()$df,data()$subs,plot=FALSE)
       plot <- NPplot(npest,data()$peaks)
       out <- list()
       out$npest <- npest

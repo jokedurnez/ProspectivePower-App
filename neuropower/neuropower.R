@@ -1,7 +1,7 @@
 #DEPENDENCIES: BioNet, AnalyzeFMRI, QVALUE
 
 
-cluster <- function(zmap){
+cluster <- function(zmap,u){
   options(warn=-1)
   cat("Searching for peaks")
 #  zmap <- ifelse(length(dim(zmap))==4,zmap[,,,1],zmap)
@@ -15,6 +15,7 @@ cluster <- function(zmap){
       incProgress(1/m,detail=paste("Percentage finished:",100*round(m/(dim(Zstar)[1]-1),digits=2),"%"))
      for(n in 2:(dim(Zstar)[2]-1)){
       for(o in 2:(dim(Zstar)[3]-1)){
+        if(Zstar[m,n,o]<u){next}
         surroundings <- c(Zstar[m-1,n+1,o],
                           Zstar[m,n+1,o],
                           Zstar[m+1,n+1,o],
@@ -56,43 +57,51 @@ cluster <- function(zmap){
   return(results)
 }
   
-sumlogtruncdens <- function(x,par,pi0){
-    options(warn=-1)
-    mu.2 <- par[1]; sigma.2 <- par[2]
-    x2 <- x-2
-    f.x.0 <- 2*exp(-2*(x2))
-    f.x.num.1 <- 1/sigma.2 * dnorm((x-mu.2)/sigma.2)
-    F.x.den.1 <- 1-pnorm((2-mu.2)/sigma.2)
-    
-    f.x <- pi0*f.x.0 + (1-pi0)*f.x.num.1/F.x.den.1
-    return(-sum(log(f.x)))
-  }
+sumlogtruncdensBIS <- function(x,par,pi0,a){
+  mu.2 <- par[1]; sigma.2 <- par[2]
+  x2 <- x-a
+  f.x.0 <- a*exp(-a*(x2))
+  
+  f.x.num.1 <- 1/sigma.2 * dnorm((x-mu.2)/sigma.2)
+  F.x.den.1 <- 1-pnorm((a-mu.2)/sigma.2)
+  
+  f.x <- pi0*f.x.0 + (1-pi0)*(f.x.num.1/F.x.den.1)
+  return(-sum(log(f.x)))
+}
 
-truncdens <- function(x,par,pi0){
-    options(warn=-1)
-    mu.2 <- par[1]; sigma.2 <- par[2]
-    x2 <- x-2
-    f.x.0 <- 2*exp(-2*(x2))
-    
-    f.x.num.1 <- 1/sigma.2 * dnorm((x-mu.2)/sigma.2)
-    F.x.den.1 <- 1-pnorm((2-mu.2)/sigma.2)
-    
-    f.x <- pi0*f.x.0 + (1-pi0)*f.x.num.1/F.x.den.1
-    return(f.x)
-  }
+truncdensBIS <- function(x,par,pi0,a){
+  mu.2 <- par[1]; sigma.2 <- par[2]
+  x2 <- x-a
+  f.x.0 <- a*exp(-a*(x2))
+  
+  f.x.num.1 <- 1/sigma.2 * dnorm((x-mu.2)/sigma.2)
+  F.x.den.1 <- 1-pnorm((a-mu.2)/sigma.2)
+  
+  f.x <- pi0*f.x.0 + (1-pi0)*f.x.num.1/F.x.den.1
+  return(f.x)
+}
+
+truncdensNUL <- function(x,a){
+  #PDF = u*exp(-u*(x-u))
+  #CDF = 1-exp(-u*(x-u))
+  f.x.0 <- a*exp(-a*(x-a))
+  return(f.x.0)
+}
+
 
 CDFtrunc <- function(x,mu,sigma,a){
-  options(warn=-1)
   ksi <- (x-mu)/sigma
   alpha <- (a-mu)/sigma
   F.x <- (pnorm(ksi)-pnorm(alpha))/(1-pnorm(alpha))
   return(F.x)
 }
 
+
 NPplot <- function(estimates,peaklist){
     options(warn=-1)
     pi0e <- estimates[[1]]
     mixture <- estimates[[2]]
+    u <- estimates$u
     par(mfrow=c(1,2),mar=c(4,5,5,1))
     cols <- c("#A6CEE3","#1F78B4","#41AB5D","#006D2C")
     breakshist <- seq(from=0,to=1,by=0.1)
@@ -101,22 +110,22 @@ NPplot <- function(estimates,peaklist){
     lines(xn,rep(pi0e,1000),col=cols[3],lwd=3)
     lines(xn,(dbeta(xn,estimates$a,1)*(1-pi0e)+pi0e),col=cols[2],lwd=3)
     mtext(bquote(pi[1] ~ "=" ~ .(round(1-pi0e,digits=2))))
-    legend(0.3,max(histo$density),c("Estimated null distribution","Estimated total distribution"),fill=cols[c(3,2)],border=cols[c(3,2)],box.lwd=0,box.col="white")
+    legend(0.3,max(histo$density),c("Estimated null","Estimated total"),fill=cols[c(3,2)],border=cols[c(3,2)],box.lwd=0,box.col="white")
 
     x <- seq(from=2,to=15,length=10000)
-    yt <- truncdens(x,mixture,pi0=pi0e)
-    yN <- truncdens(x,mixture,pi0=1)
-    yA <- truncdens(x,mixture,pi0=0)
+    yt <- truncdensBIS(x,mixture,pi0=pi0e,u)
+    yN <- truncdensBIS(x,mixture,pi0=1,u)
+    yA <- truncdensBIS(x,mixture,pi0=0,u)
     breakshist <- seq(from=2,to=15,by=0.40)
-    histo <- hist(peaklist$peaks,freq=FALSE,col=cols[1],border=cols[1],breaks=breakshist,xlab="peak heights",main="Distribution of peak heights",xlim=c(2,8))
-    mtext(bquote(pi[1] ~ "=" ~ .(round(1-pi0e,digits=2)) ~ "//" ~ delta ~ sqrt(15) ~ "=" ~ .(round(mixture[1],digits=2))))
+    histo <- hist(peaklist$peaks,freq=FALSE,col=cols[1],border=cols[1],breaks=breakshist,xlab="peak heights",main="Distribution of peak heights",xlim=c(u,8))
+    mtext(bquote(pi[1] ~ "=" ~ .(round(1-pi0e,digits=2)) ~ "-" ~ delta ~ "=" ~ .(round(mixture[1]/sqrt(estimates$subjects),digits=2))))
     lines(x,yA*(1-pi0e),col=cols[3],lwd=3)
     lines(x,yN*pi0e,col=cols[4],lwd=3)
     lines(x,yt,col=cols[2],lwd=3)
-    legend(3.7,max(histo$density),c("Estimated alternative distribution","Estimated null distribution","Estimated total distribution"),fill=cols[c(3,4,2)],border=cols[c(3,4,2)],box.lwd=0,box.col="white")
+    legend(3.7,max(histo$density),c("Estimated alternative","Estimated null","Estimated total"),fill=cols[c(3,4,2)],border=cols[c(3,4,2)],box.lwd=0,box.col="white")
 }
     
-NPestimate <- function(peaklist,STAT,u,df,plot){
+NPestimate <- function(peaklist,STAT,u,df,subs,plot){
   options(warn=-1)
   try(BUM <- bumOptim(peaklist$pvalue,starts=1))
   if(BUM=="BUM model could not be fitted to data"){
@@ -128,7 +137,7 @@ NPestimate <- function(peaklist,STAT,u,df,plot){
     cat("\n Estimated prevalence of activation is 0.  Power cannot be estimated.")
     stop
   }  
-  mixture <- optim(par=c(6,0.1),fn=sumlogtruncdens,x=peaklist$peaks,pi0=pi0e,lower=c(2,0.1),upper=c(Inf,2.5),method="L-BFGS-B")
+  	mixture <- optim(par=c(5,0.5),method="L-BFGS-B",lower=c(2.5,0.1),fn=sumlogtruncdensBIS,x=peaklist$peaks,pi0=pi0e,a=u)
   estimates <- list(1-pi0e,mixture$par)
   names(estimates) <- c("pi1","Ha")
   names(estimates$Ha) <- c("Delta","Sigma")
@@ -136,6 +145,7 @@ NPestimate <- function(peaklist,STAT,u,df,plot){
   estimates$a <- BUM$a
   estimates$lambda <- BUM$lambda
   estimates$peaks <- peaklist
+  estimates$subjects <- subs
   if(plot==TRUE){NPplot(estimates,peaklist)}
   return(estimates)
 }
@@ -167,7 +177,7 @@ NPposthoc <- function(estimates,subjects,MCP,u,alpha){
 	 	power <- power.Q
   } else if (MCP == "FWE"){
 	 	power <- power.FWE
-  } else if (MCP == "UN"){
+  } else if (MCP == "uncorrected"){
 	 	power <- power.UN
   } else {cat("Unknown MCP"); stop}
 	
