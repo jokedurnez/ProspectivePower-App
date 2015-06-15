@@ -28,8 +28,7 @@ shinyUI(fluidPage(
           actionButton("Compute3",label="Compute"),   
           h4("Sample size calculation."),
           sliderInput("power", "What level of power do you want to obtain?", min = 0, max = 1, value = 0.8, step= 0.05),
-          actionButton("Compute4",label="Compute"),
-          actionButton("Compute4",label="Display Plot")
+          actionButton("Compute4",label="Compute")
  )  
  
     )),
@@ -45,7 +44,9 @@ shinyUI(fluidPage(
         h2("Use"),
         p("In a first step, you can upload your statistical map (z-map or t-map) to extract peak information.  Note that the data are NOT stored on any server once the peak information is extracted.  This step usually takes less than 1 minute.  The result of this step can be seen in the tab",strong("Peaks"),", where a table will be displayed with all local maxima above the preferred excursion threshold.  The displayed x-,y- and z-coordinates are in voxel space."),
         p("Subsequently, the mixture model of inactive and active peaks is fit to the data.  This model fitting includes an estimation of both the prevalence of active peaks, the mean (delta) and the standard deviation (sigma) of the distribution of active peaks.  The fit of the model can be inpected in the tab",strong("Model fit"),".  The left hand panel will show a histogram of the peak p-values with their estimated distribution, and the right hand panel will show a histogram of the peak heights (t or z) with their estimated null, alternative and combined distributions."),
-        p("Finally, the power can be calculated.  When entering the preferred thresholding procedure and level of significance, the post-hoc power will be estimated for the current data (result desplayed in tab",strong("Post-hoc"),",as well as the minimal sample size for a certain level of power in a new dataset.")),
+        p("Finally, the power can be calculated.  When entering the preferred thresholding procedure and level of significance, the post-hoc power will be estimated for the current data (result desplayed in tab",strong("Post-hoc"),"), as well as the minimal sample size for a certain level of power in a new dataset ."),
+        h2("Source"),
+        p("This application is free for any use.  The original code can be found on",a("my github page",href = "https://github.com/jokedurnez"),"(result desplayed in tab",strong("Power"),".")),
         tabPanel("Peaks",br(),tableOutput("nTable")),
         tabPanel("Model fit",plotOutput("NPplot")),
         tabPanel("Post-hoc",br(),textOutput("Posthoc")),
