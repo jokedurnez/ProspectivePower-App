@@ -2,6 +2,7 @@ library(shiny)
 library(BioNet)
 library(oro.nifti)
 library(qvalue)
+library(AnalyzeFMRI)
 source("neuropower.R")
 
 
@@ -16,12 +17,17 @@ shinyServer(
       withProgress(message = 'Calculation in progress',
                    detail = paste("Percentage finished:",0), value = 0,expr={
       u <- as.numeric(input$PeakThres)
-                     
+      mask <- ifelse(is.na(data) | data==0,0,1)
+      sigma <- SmoothEst(data,mask=mask,voxdim=c(1,1,1))
+      FWHM <- diag(sqrt(sigma*(8*log(2))))
+      resels = sum(mask)/prod(FWHM)
+      
       peaks <- cluster(data,u)})
       sub <- as.numeric(input$Subjects)
       df <- ifelse(input$OneTwoSample=="One-Sample",sub-1,sub-2)
       peaks <- peaks[peaks$peaks>u,]
       peaks$pvalue <- exp(-u*(peaks$peaks-u)) 
+      
       if(input$TorZ == "T"){peaks$pvalue <- -qnorm(pt(-peaks$pvalue,df))}   
       peaks$pvalue[peaks$pvalue==0] <- 10^(-6)
       peaks$pvalue[peaks$pvalue==1] <- 1-10^(-6)
@@ -32,6 +38,7 @@ shinyServer(
       out$subs <- sub
       out$u <- u
       out$df <- df
+      out$resels <- resels
       
      out
       })
@@ -49,20 +56,21 @@ shinyServer(
     
     np.posthoc <- reactive({
       if(input$Compute3==0){return()}
-      npposthoc <- NPposthoc(np.est()$npest,data()$subs,input$MCP,data()$u,as.numeric(input$alpha))
+      npposthoc <- NPposthoc(np.est()$npest,data()$subs,input$MCP,data()$u,as.numeric(input$alpha),data()$resels)
       
       npposthoc
     })
     
     np.samplesize <- reactive({
       if(input$Compute4==0){return()}
-      npss <- NPsamplesize(np.est()$npest,data()$subs,100,input$MCP,data()$u,as.numeric(input$alpha),as.numeric(input$power),plot=TRUE)
+      npss <- NPsamplesize(np.est()$npest,data()$subs,50,input$MCP,data()$u,as.numeric(input$alpha),as.numeric(input$power),data()$resels,plot=TRUE)
       
       npss
       
     })
     
-     output$nTable <- renderTable({
+    
+    output$nTable <- renderTable({
        input$Compute1
        m <- data()$peaks
        m
@@ -80,10 +88,16 @@ shinyServer(
       m
     })
     
-     output$power <- renderPlot({
+    output$powertext <- renderText({
       input$Compute4
-      m <- np.samplesize()$plotje
+      m <- np.samplesize()$tekstje
       m
+    })
+    
+     output$power <- renderPlot({
+      input$Compute5
+      n <- np.samplesize()$plotje
+      n
     })
 })
 
