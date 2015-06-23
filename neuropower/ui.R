@@ -6,6 +6,7 @@ shinyUI(fluidPage(
 	sidebarLayout(
 		sidebarPanel(
 			tabsetPanel(
+				# in sidebar: first panel: load data
 				tabPanel("1. Load data",
 					br(),
 					fileInput("MapName","Select your statistical parametric map for a certain contrast (T or Z) in nifti format (.nii, NOT .nii.gz).",multiple=FALSE),
@@ -22,11 +23,13 @@ shinyUI(fluidPage(
 
 				),  
 
+				# in sidebar: second panel: estimate model
 				tabPanel("2. Estimate model",
 					h4("Fit mixture model to peaks."),
 					actionButton("Compute2",label="Estimate")
 				),
 				
+				# in sidebar: third panel: compute post-hoc power and sample size
 				tabPanel("3. Power",
 					br(),
 					h4("Post-hoc power"),
@@ -43,6 +46,8 @@ shinyUI(fluidPage(
 
 		mainPanel(
 			tabsetPanel(
+			
+			# in main panel: first panel: Readme
 			tabPanel("Welcome",
 				br(),
 				span("This is beta software! Please report any bugs.", style = "color:red"),
@@ -54,9 +59,13 @@ shinyUI(fluidPage(
 				p("In a first step, you can upload your statistical map (z-map or t-map) to extract peak information.  Note that the data are NOT stored on any server once the peak information is extracted.  This step usually takes less than 1 minute.  The result of this step can be seen in the tab",strong("Peaks"),", where a table will be displayed with all local maxima above the preferred excursion threshold.  The displayed x-,y- and z-coordinates are in voxel space."),
 				p("Subsequently, the mixture model of inactive and active peaks is fit to the data.  This model fitting includes an estimation of both the prevalence of active peaks, the mean (delta) and the standard deviation (sigma) of the distribution of active peaks.  The fit of the model can be inpected in the tab",strong("Model fit"),".  The left hand panel will show a histogram of the peak p-values with their estimated distribution, and the right hand panel will show a histogram of the peak heights (t or z) with their estimated null, alternative and combined distributions."),
 				p("Finally, the power can be calculated.  When entering the preferred thresholding procedure and level of significance, the post-hoc power will be estimated for the current data (result displayed in tab",strong("Post-hoc"),"), as well as the minimal sample size for a certain level of power in a new dataset (result displayed in tab",strong("Power"),")."),
+				h2("Support and Communication"),
+				p("If you have a problem or question, please e-mail me at joke.durnez@gmail.com"),
 				h2("Source"),
 				p("This application is free for any use.  The original code can be found on",a("my github page",href = "https://github.com/jokedurnez"),".")
 			),
+			
+			# in main panel: subsequent panels with their outputs
 			tabPanel("Peaks",br(),tableOutput("nTable")),
 			tabPanel("Model fit",plotOutput("NPplot")),
 			tabPanel("Post-hoc",br(),textOutput("Posthoc")),
