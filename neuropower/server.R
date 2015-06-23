@@ -48,13 +48,13 @@ shinyServer(function(input,output){
 		# compute clusters and peaks with progression bar
 		withProgress(message = 'Calculation in progress',
 				   detail = paste("Percentage finished:",0), value = 0,expr={
-			peaks <- cluster(data,u)})
-		}  
+			peaks <- cluster(data,u)
+		})
 		 
 		# adjust peak list
 		peaks <- peaks[peaks$peaks>u,]
 		peaks$pvalue <- exp(-u*(peaks$peaks-u)) 
-		if(input$TorZ == "T"){peaks$pvalue <- -qnorm(pt(-peaks$pvalue,df))
+		if(input$TorZ == "T"){peaks$pvalue <- -qnorm(pt(-peaks$pvalue,df))}
 		peaks$pvalue[peaks$pvalue==0] <- 10^(-6)
 		peaks$pvalue[peaks$pvalue==1] <- 1-10^(-6)
 
@@ -67,7 +67,7 @@ shinyServer(function(input,output){
 		out$resels <- resels
 
 		out
-	})
+		})
 
 	# estimate model
 	
