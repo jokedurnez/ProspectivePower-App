@@ -263,7 +263,7 @@ NPsamplesize <- function(estimates,subjects,maxsubjects,MCP,u,alpha,power,resels
 	} else if (MCP == "FWE"){
 		samplesize <- newsamplesize[4]
 	} else if (MCP == "RFT"){
-		samplesize <- newsamplesize[4]  
+		samplesize <- newsamplesize[5]  
 	} else {cat("Unknown MCP"); stop}
 
 	if(plot==TRUE){plotje <- NPssplot(newsubjects,powers,newsamplesize,newpower,power,subjects,MCP,alpha,samplesize)}
