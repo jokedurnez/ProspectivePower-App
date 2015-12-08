@@ -6,47 +6,68 @@ shinyUI(fluidPage(
 	sidebarLayout(
 		sidebarPanel(
 			tabsetPanel(
-				# in sidebar: first panel: load data
+				# in sidebar: first panel: all specs
 				tabPanel("1. Load data",
 					br(),
-					fileInput("MapName","Select your statistical parametric map for a certain contrast (T or Z) in nifti format (.nii, NOT .nii.gz).",multiple=FALSE),
-					selectInput("TorZ","Are the values Z- or T-values?",choices=c("Z","T")),
-					selectInput("torp","What is your peakforming threshold?",choices=list("units = p-value"=1,"units = t- or z-value"=2)),				textInput("PeakThres",label="",value="0.01"),
-					textInput("Subjects",label="How many subjects?",value="10"),
-					selectInput("OneTwoSample",label="Is the study a one- or two-sample test?",choices=c("One-sample","Two-sample")),
-					radioButtons("Smoothchoice", label = "How do you want the smoothness to be defined?",choices = list("Estimate from the data" = 1, "Manual input" = 2),selected = 1),
-					textInput("FWHMmm",label="If manually: what is the FWHM in mm? (eg. '[8,8,8]')"),
-					textInput("vsize",label="If manually: What is the voxelsize? (eg. '[2,2,2.3]')"),
-					actionButton("Compute1",label="Extract peaks")
-					
-					
-
-				),  
+					fileInput("MapName",
+						"Select your statistical parametric map for a certain contrast (T or Z) in nifti format (.nii, NOT .nii.gz).",
+						multiple=FALSE
+						),
+					selectInput("TorZ",
+						"Are the values Z- or T-values?",
+						choices=c("Z","T")
+						),
+					selectInput("torp",
+						"What is your peakforming threshold?",
+						choices=list("units = p-value"=1,"units = t- or z-value"=2)
+						),
+					textInput("PeakThres",
+						label="",
+						value="0.01"
+						),
+					textInput("Subjects",
+						label="How many subjects?",
+						value="10"
+						),
+					selectInput("OneTwoSample",
+						label="Is the study a one- or two-sample test?",
+						choices=c("One-sample","Two-sample")
+						),
+					radioButtons("Smoothchoice",
+						label = "How do you want the smoothness to be defined?",
+						choices = list("Estimate from the data" = 1, "Manual input" = 2),
+						selected = 1
+						),
+					textInput("FWHMmm",
+						label="If manually: what is the FWHM in mm? (eg. '[8,8,8]')"
+						),
+					textInput("vsize",
+						label="If manually: What is the voxelsize? (eg. '[2,2,2.3]')"
+						),
+					actionButton("Compute1",
+						label="Extract peaks"
+						)
+				),
 
 				# in sidebar: second panel: estimate model
-				tabPanel("2. Estimate model",
+				tabPanel("2. Model and power",
 					h4("Fit mixture model to peaks."),
-					actionButton("Compute2",label="Estimate")
-				),
-				
-				# in sidebar: third panel: compute post-hoc power and sample size
-				tabPanel("3. Power",
-					br(),
+					actionButton("Compute2",label="Estimate"),
 					h4("Post-hoc power"),
-					selectInput("MCP",label="Which multiple testing procedure has been used?",choices=list("Benjamini-Hochberg"="BH","Bonferroni (peaks)"="FWE","Uncorrected"="UN","Storey (Q-value)"="Q","Random Field Theory"="RFT")),
+					selectInput("MCP",label="Which multiple testing procedure has been used?",choices=list("Uncorrected"="UN","Bonferroni (peaks)"="BF","Random Field Theory"="RFT","Benjamini-Hochberg"="BH")),
 					textInput("alpha",label="At which significance level was this control?",value="0.05"),
-					actionButton("Compute3",label="Compute"),   
+					actionButton("Compute3",label="Compute"),
 					h4("Sample size calculation."),
 					sliderInput("power", "What level of power do you want to obtain?", min = 0, max = 1, value = 0.8, step= 0.05),
 					actionButton("Compute4",label="Compute")
-				)  
+				)
 			)
 		),
 
 
 		mainPanel(
 			tabsetPanel(
-			
+
 			# in main panel: first panel: Readme
 			tabPanel("Welcome",
 				br(),
@@ -64,12 +85,12 @@ shinyUI(fluidPage(
 				h2("Source"),
 				p("This application is free for any use.  The original code can be found on",a("my github page",href = "https://github.com/jokedurnez"),".")
 			),
-			
+
 			# in main panel: subsequent panels with their outputs
-			tabPanel("Peaks",br(),tableOutput("nTable")),
-			tabPanel("Model fit",plotOutput("NPplot")),
+			tabPanel("Peaks",tableOutput("PeakTable")),
+			tabPanel("Model fit",br(),plotOutput("ModelPlot")),
 			tabPanel("Post-hoc",br(),textOutput("Posthoc")),
-			tabPanel("Power",plotOutput("power"))
+			tabPanel("Power",br(),plotOutput("Power"))
 			)
 		)
 	)
