@@ -1,5 +1,5 @@
 library(shiny)
-setwd("~/Documents/Onderzoek/Studie_4_propow/ProspectivePower-app/neuropower")
+setwd("/Users/Joke/Documents/Onderzoek/ProjectsOngoing/Power/NeuropowerShiny/neuropower/")
 runApp()
 
 library(shinyapps)

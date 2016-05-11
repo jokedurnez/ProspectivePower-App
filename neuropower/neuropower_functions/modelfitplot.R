@@ -40,8 +40,9 @@ model.plot <- function(x,p,pi0,a,par,u,n){
 	# right plot: histogram of peak heights with fitted distributions
 
   # histogram
-	breakshist <- seq(from=u,to=15,by=0.40)
-	histo <- hist(x,freq=FALSE,col=col[1],border=col[1],breaks=breakshist,xlab="peak heights",main="Distribution of peak heights",xlim=c(u,8))
+  breaks <- (max(x)-min(x))/20
+	breakshist <- seq(from=u-breaks,to=max(x)+breaks,by=breaks)
+	histo <- hist(x,freq=FALSE,col=col[1],border=col[1],breaks=breakshist,xlab="peak heights",main="Distribution of peak heights",xlim=c(u,max(x)))
   # lines
   x <- seq(from=u,to=15,length=10000)
 	y.tot <- mix.pdf(x,par,pi0,u)
